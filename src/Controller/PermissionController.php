@@ -11,61 +11,43 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('api/permission')]
+#[Route('permission')]
 class PermissionController extends AbstractController
 {
     #[Route('/', name: 'app_permission_index', methods: ['GET'])]
     public function index(PermissionRepository $permissionRepository): Response
     {
-        return $this->render('permission/index.html.twig', [
-            'permissions' => $permissionRepository->findAll(),
-        ]);
+        return $this->json($permissionRepository->findAll());
     }
 
     #[Route('/new', name: 'app_permission_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
+        $data = json_decode($request->getContent(), true);
         $permission = new Permission();
-        $form = $this->createForm(PermissionType::class, $permission);
-        $form->handleRequest($request);
+        $permission->setName($data['name']);
 
-        if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($permission);
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_permission_index', [], Response::HTTP_SEE_OTHER);
-        }
-
-        return $this->renderForm('permission/new.html.twig', [
-            'permission' => $permission,
-            'form' => $form,
-        ]);
+        return $this->json($permission, Response::HTTP_CREATED);
     }
 
     #[Route('/{id}', name: 'app_permission_show', methods: ['GET'])]
     public function show(Permission $permission): Response
     {
-        return $this->render('permission/show.html.twig', [
-            'permission' => $permission,
-        ]);
+        return $this->json($permission);
     }
 
     #[Route('/{id}/edit', name: 'app_permission_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Permission $permission, EntityManagerInterface $entityManager): Response
     {
-        $form = $this->createForm(PermissionType::class, $permission);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
-
-            return $this->redirectToRoute('app_permission_index', [], Response::HTTP_SEE_OTHER);
+        $data = json_decode($request->getContent(), true);
+        if (isset($data['name'])) {
+            $permission->setName($data['name']);
         }
-
-        return $this->renderForm('permission/edit.html.twig', [
-            'permission' => $permission,
-            'form' => $form,
-        ]);
+        $entityManager->flush();
+        return $this->json($permission);
     }
 
     #[Route('/{id}', name: 'app_permission_delete', methods: ['POST'])]
@@ -76,6 +58,6 @@ class PermissionController extends AbstractController
             $entityManager->flush();
         }
 
-        return $this->redirectToRoute('app_permission_index', [], Response::HTTP_SEE_OTHER);
+        return new Response(null, Response::HTTP_NO_CONTENT);
     }
 }

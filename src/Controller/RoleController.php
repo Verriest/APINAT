@@ -11,61 +11,46 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('api/role')]
+#[Route('role')]
 class RoleController extends AbstractController
 {
     #[Route('/', name: 'app_role_index', methods: ['GET'])]
     public function index(RoleRepository $roleRepository): Response
     {
-        return $this->render('role/index.html.twig', [
-            'roles' => $roleRepository->findAll(),
-        ]);
+        return $this->json($roleRepository->findAll());
     }
 
     #[Route('/new', name: 'app_role_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
-        $role = new Role();
-        $form = $this->createForm(RoleType::class, $role);
-        $form->handleRequest($request);
+        $data = json_decode($request->getContent(), true);
+        $permission = new Role();
+        $permission->setName($data['name']);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($role);
+            $entityManager->persist($permission);
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_role_index', [], Response::HTTP_SEE_OTHER);
-        }
-
-        return $this->renderForm('role/new.html.twig', [
-            'role' => $role,
-            'form' => $form,
-        ]);
+        return $this->json($permission, Response::HTTP_CREATED);
     }
 
     #[Route('/{id}', name: 'app_role_show', methods: ['GET'])]
     public function show(Role $role): Response
     {
-        return $this->render('role/show.html.twig', [
-            'role' => $role,
-        ]);
+        return $this->json($role);
     }
 
     #[Route('/{id}/edit', name: 'app_role_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Role $role, EntityManagerInterface $entityManager): Response
     {
-        $form = $this->createForm(RoleType::class, $role);
-        $form->handleRequest($request);
+        $data = json_decode($request->getContent(), true);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
-
-            return $this->redirectToRoute('app_role_index', [], Response::HTTP_SEE_OTHER);
+        if (isset($data['name'])) {
+            $role->setName($data['name']);
         }
 
-        return $this->renderForm('role/edit.html.twig', [
-            'role' => $role,
-            'form' => $form,
-        ]);
+        $entityManager->flush();
+
+        return $this->json($role);
     }
 
     #[Route('/{id}', name: 'app_role_delete', methods: ['POST'])]
@@ -76,6 +61,6 @@ class RoleController extends AbstractController
             $entityManager->flush();
         }
 
-        return $this->redirectToRoute('app_role_index', [], Response::HTTP_SEE_OTHER);
+        return new Response(null, Response::HTTP_NO_CONTENT);
     }
 }
