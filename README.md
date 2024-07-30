@@ -1,4 +1,9 @@
-# TEST TECHNIQUE GROUPE NAT 
+# TEST TECHNIQUE 
+
+## Description
+
+Ce projet en Symfony 7.1 est une API qui utilise JWT pour gérer les utilisateurs, de la création à la gestion des permissions et des rôles. Il est complet, incluant des tests unitaires ainsi qu'un événement qui permet l'envoi d'un email lors de la création d'un nouvel utilisateur.
+
 
 ## Prérequis
 
@@ -62,7 +67,7 @@ php bin/phpunit
 
 ## Remerciements
 
-Je tiens à exprimer ma gratitude à la société GROUPE NAT pour m'avoir offert l'opportunité de réaliser ce test technique. J'ai apprécié le défi et l'occasion de démontrer mes compétences.
+Je tiens à exprimer ma gratitude à la société  qui ma offert l'opportunité de réaliser ce test technique. J'ai apprécié le défi et l'occasion de démontrer mes compétences.
 
 Si vous avez la moindre question ou souhaitez discuter davantage de mes réponses, n'hésitez pas à me contacter par email ou par téléphone. Je serais ravi de répondre à toutes vos interrogations.
 
