@@ -12,7 +12,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class ApiController extends AbstractController
 {
-    #[Route('/api/login', name: 'api_token')]
+    #[Route('/api/login', name: 'api_token', methods: ['POST'])]
     public function getTokenUser(UserInterface $user, JWTTokenManagerInterface $JWTManager): Response
     {
         return new JsonResponse(['token' => $JWTManager->create($user)]);

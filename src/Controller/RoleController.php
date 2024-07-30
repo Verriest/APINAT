@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Permission;
 use App\Entity\Role;
 use App\Form\RoleType;
 use App\Repository\RoleRepository;
@@ -62,5 +63,18 @@ class RoleController extends AbstractController
         }
 
         return new Response(null, Response::HTTP_NO_CONTENT);
+    }
+
+
+    #[Route('/{id}/permissions', name: 'app_role_add_permission', methods: ['POST'])]
+    public function addPermission(Request $request, Role $role, EntityManagerInterface $entityManager): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        $permissions = $entityManager->getRepository(Permission::class)->findBy(['id' => $data['permissionIds']]);
+        foreach ($permissions as $permission) {
+            $role->addPermission($permission);
+        }
+        $entityManager->flush();
+        return $this->json($role);
     }
 }

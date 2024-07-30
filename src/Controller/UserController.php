@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Role;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -78,4 +79,16 @@ class UserController extends AbstractController
         return new Response(null, Response::HTTP_NO_CONTENT);
     }
 
+
+    #[Route('/{id}/roles', name: 'app_user_add_role', methods: ['POST'])]
+    public function addRole(Request $request, User $user, EntityManagerInterface $entityManager): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        $roles = $entityManager->getRepository(Role::class)->findBy(['id' => $data['roleIds']]);
+        foreach ($roles as $role) {
+            $user->addRole($role);
+        }
+        $entityManager->flush();
+        return $this->json($user);
+    }
 }
