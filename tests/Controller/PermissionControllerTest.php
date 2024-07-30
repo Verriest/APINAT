@@ -7,110 +7,74 @@ use App\Repository\PermissionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Response;
 
 class PermissionControllerTest extends WebTestCase
 {
-    private KernelBrowser $client;
-    private PermissionRepository $repository;
-    private string $path = '/permission/';
-    private EntityManagerInterface $manager;
-
-    protected function setUp(): void
+    public function testIndex()
     {
-        $this->client = static::createClient();
-        $this->repository = static::getContainer()->get('doctrine')->getRepository(Permission::class);
-
-        foreach ($this->repository->findAll() as $object) {
-            $this->manager->remove($object);
-        }
+        $client = static::createClient();
+        $client->request('GET', '/api/permission/');
+        $this->assertResponseIsSuccessful();
+        $this->assertResponseHeaderSame('Content-Type', 'application/json');
     }
 
-    public function testIndex(): void
+    public function testNew()
     {
-        $crawler = $this->client->request('GET', $this->path);
-
-        self::assertResponseStatusCodeSame(200);
-        self::assertPageTitleContains('Permission index');
-
-        // Use the $crawler to perform additional assertions e.g.
-        // self::assertSame('Some text on the page', $crawler->filter('.p')->first());
+        $client = static::createClient();
+        $client->request(
+            'POST',
+            '/api/permission/new',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode(['name' => 'PERMISSION_NEW'])
+        );
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $this->assertResponseHeaderSame('Content-Type', 'application/json');
     }
 
-    public function testNew(): void
+    public function testShow()
     {
-        $originalNumObjectsInRepository = count($this->repository->findAll());
-
-        $this->markTestIncomplete();
-        $this->client->request('GET', sprintf('%snew', $this->path));
-
-        self::assertResponseStatusCodeSame(200);
-
-        $this->client->submitForm('Save', [
-            'permission[name]' => 'Testing',
-        ]);
-
-        self::assertResponseRedirects('/permission/');
-
-        self::assertSame($originalNumObjectsInRepository + 1, count($this->repository->findAll()));
+        $client = static::createClient();
+        $permission = $this->createPermission();
+        $client->request('GET', '/api/permission/' . $permission->getId());
+        $this->assertResponseIsSuccessful();
+        $this->assertResponseHeaderSame('Content-Type', 'application/json');
     }
 
-    public function testShow(): void
+    public function testEdit()
     {
-        $this->markTestIncomplete();
-        $fixture = new Permission();
-        $fixture->setName('My Title');
-
-        $this->manager->persist($fixture);
-        $this->manager->flush();
-
-        $this->client->request('GET', sprintf('%s%s', $this->path, $fixture->getId()));
-
-        self::assertResponseStatusCodeSame(200);
-        self::assertPageTitleContains('Permission');
-
-        // Use assertions to check that the properties are properly displayed.
+        $client = static::createClient();
+        $permission = $this->createPermission();
+        $client->request(
+            'POST',
+            '/api/permission/' . $permission->getId() . '/edit',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode(['name' => 'PERMISSION_UPDATED'])
+        );
+        $this->assertResponseIsSuccessful();
+        $this->assertResponseHeaderSame('Content-Type', 'application/json');
     }
 
-    public function testEdit(): void
+    public function testDelete()
     {
-        $this->markTestIncomplete();
-        $fixture = new Permission();
-        $fixture->setName('My Title');
-
-        $this->manager->persist($fixture);
-        $this->manager->flush();
-
-        $this->client->request('GET', sprintf('%s%s/edit', $this->path, $fixture->getId()));
-
-        $this->client->submitForm('Update', [
-            'permission[name]' => 'Something New',
-        ]);
-
-        self::assertResponseRedirects('/permission/');
-
-        $fixture = $this->repository->findAll();
-
-        self::assertSame('Something New', $fixture[0]->getName());
+        $client = static::createClient();
+        $permission = $this->createPermission();
+        $client->request(
+            'POST',
+            '/api/permission/' . $permission->getId(),
+            ['_token' => 'valid_csrf_token']
+        );
+        $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
     }
 
-    public function testRemove(): void
+    private function createPermission(): Permission
     {
-        $this->markTestIncomplete();
-
-        $originalNumObjectsInRepository = count($this->repository->findAll());
-
-        $fixture = new Permission();
-        $fixture->setName('My Title');
-
-        $this->manager->persist($fixture);
-        $this->manager->flush();
-
-        self::assertSame($originalNumObjectsInRepository + 1, count($this->repository->findAll()));
-
-        $this->client->request('GET', sprintf('%s%s', $this->path, $fixture->getId()));
-        $this->client->submitForm('Delete');
-
-        self::assertSame($originalNumObjectsInRepository, count($this->repository->findAll()));
-        self::assertResponseRedirects('/permission/');
+        $permission = new Permission();
+            $permission->setName('permission_99');
+        return $permission;
     }
 }
