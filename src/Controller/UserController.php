@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Role;
 use App\Entity\User;
+use App\Event\UserCreatedEvent;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
@@ -12,6 +13,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[Route('api/user')]
 class UserController extends AbstractController
@@ -23,7 +25,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/new', name: 'app_user_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, EventDispatcherInterface $eventDispatcher): Response
     {
         $data = json_decode($request->getContent(), true);
         $user = new User();
@@ -38,6 +40,8 @@ class UserController extends AbstractController
             }
             $entityManager->persist($user);
             $entityManager->flush();
+
+            $eventDispatcher->dispatch(new UserCreatedEvent($user), UserCreatedEvent::NAME);
 
         return $this->json($user, Response::HTTP_CREATED);
     }
